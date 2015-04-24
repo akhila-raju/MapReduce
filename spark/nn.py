@@ -85,29 +85,34 @@ class NNClassifier(Classifier):
     """ 
     TODO: Implement softmax loss layer 
     """
-    softmax = data.map(lambda (x, l, y): (x, softmax_loss(l[-1], y))) \
-                  .map(lambda (x, (L, df)): (x, (L/count, df/count)))
+    softmax = data.map(lambda (x, l, y): (x, softmax_loss(l[-1], y) + (l,))) \
+                  .map(lambda (x, (L, df, a)): (x, (L/count, df/count, a)))
     """
     TODO: Compute the loss
     """
-    L = softmax.map(lambda (x, (y, z)): y).reduce(lambda x, y: x + y)
+    L = softmax.map(lambda (x, (y, z, a)): y).reduce(lambda x, y: x + y)
 
     """ regularization """
     L += 0.5 * self.lam * (np.sum(self.A1*self.A1) + np.sum(self.A3*self.A3))
 
     """ Todo: Implement backpropagation for Layer 3 """
 
+    back_p_l3 = softmax.map(lambda (k, (x, y, a)): (k, linear_backward(y, a[1], self.A3) + (a,)))
+    #returns dLdl2, dLdA3, dLdb3
+
     """ Todo: Compute the gradient on A3 and b3 """
-    dLdA3 = np.zeros(self.A3.shape) # replace it with your code
-    dLdb3 = np.zeros(self.b3.shape) # replace it with your code
+    dLdA3 = back_p_l3.map(lambda (k, (x, y, z, a)): y).reduce(lambda x, y: y + x)
+    dLdb3 = back_p_l3.map(lambda (k, (x, y, z, a)): z).reduce(lambda x, y: y + x)
 
     """ Todo: Implement backpropagation for Layer 2 """
+    back_p_l2 = back_p_l3.map(lambda (k, (x, y, z, a)): (k, ReLU_backward(x, a[0])))
 
     """ Todo: Implmenet backpropagation for Layer 1 """
-
+    back_p_l1 = back_p_l2.map(lambda (k, (x)): linear_backward(x, k, self.A1))
+    
     """ Todo: Compute the gradient on A3 and b3 """
-    dLdA1 = np.zeros(self.A1.shape) # replace it with your code
-    dLdb1 = np.zeros(self.b1.shape) # replace it with your code
+    dLdA1 = back_p_l1.map(lambda (x, y, z): y).reduce(lambda x, y: y + x)
+    dLdb1 = back_p_l1.map(lambda (x, y, z): z).reduce(lambda x, y: y + x)
 
     """ regularization gradient """
     dLdA3 = dLdA3.reshape(self.A3.shape)
