@@ -52,7 +52,8 @@ class LinearClassifier(Classifier):
     L, dLdl1 = softmax_loss(layer1, Y)
     if dump_chunks > 0:
       dump_big_matrix(dLdl1, "lin_dLdl1_mat", dump_chunks)
-
+    #print(dLdl1)
+    #print("end0")
     """ regularization: loss = 1/2 * lam * sum_nk(A_nk * A_nk) """
     L += 0.5 * self.lam * np.sum(A * A) 
 

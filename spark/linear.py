@@ -74,21 +74,23 @@ class LinearClassifier(Classifier):
     Hint: You need to reduce the RDD from 'softmax loss layer'
     """
     L = softmax.map(lambda (x, (y, z)): y).reduce(lambda x, y: x + y)
-    
     """ regularization: loss = 1/2 * lam * sum_nk(A_nk * A_nk) """
     L += 0.5 * self.lam * np.sum(self.A * self.A) 
 
     """ 
     Todo: Implement backpropagation for Layer 1 
     """
+    G = softmax.map(lambda (x, (y, z)): z)
     
+    back_p = softmax.map(lambda (k, (x, y)): linear_backward(y, k, self.A))
+    #print(back_p)
     """
     Todo: Calculate the gradients on A & b
     Hint: You need to reduce the RDD from 'backpropagation for Layer 1'
           Also check the output of the backward function
     """
-    dLdA = np.zeros(self.A.shape) # replace it with your code
-    dLdb = np.zeros(self.b.shape) # replace it with your code
+    dLdA = back_p.map(lambda (x, y, z): y).reduce(lambda x, y: y + x)
+    dLdb = back_p.map(lambda (x, y, z): z).reduce(lambda x, y: y + x)
 
     """ regularization gradient """
     dLdA = dLdA.reshape(self.A.shape)
