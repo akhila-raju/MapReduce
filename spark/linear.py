@@ -49,7 +49,7 @@ class LinearClassifier(Classifier):
     Todo: Implement the forward pass of Layer1
     """
 
-    return data.map(lambda (k, (x, y)): (k, (x, [linear_forward(x, self.A, self.b)], y))) # Replace it with your code
+    return data.map(lambda (k, (x, y)): (k, (x, [linear_forward(x, self.A, self.b)], y)))
 
   def backward(self, data, count):
     """
@@ -80,10 +80,9 @@ class LinearClassifier(Classifier):
     """ 
     Todo: Implement backpropagation for Layer 1 
     """
-    G = softmax.map(lambda (x, (y, z)): z)
     
     back_p = softmax.map(lambda (k, (x, y)): linear_backward(y, k, self.A))
-    #print(back_p)
+
     """
     Todo: Calculate the gradients on A & b
     Hint: You need to reduce the RDD from 'backpropagation for Layer 1'
