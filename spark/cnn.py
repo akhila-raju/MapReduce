@@ -154,8 +154,41 @@ class CNNClassifier(Classifier):
     """ TODO: Layer9: Pool (4 x 4 x 20) forward """ 
 
     """ TODO: Layer10: FC (1 x 1 x 10) forward """
+    A1 = self.A1
+    b1 = self.b1
+    A4 = self.A4
+    b4 = self.b4
+    A7 = self.A7
+    b7 = self.b7
+    S7 = self.S7
+    P7 = self.P7
+    A10 = self.A10
+    b10 = self.b10
+    S1 = self.S1
+    P1 = self.P1
+    F3 = self.F3
+    S3 = self.S3
+    S4 = self.S4
+    P4 = self.P4
+    F6 = self.F6
+    S6 = self.S6
+    F9 = self.F9
+    S9 = self.S9
 
-    return data.map(lambda (k, (x, y)): (k, (x, [(np.zeros((1,1)), np.zeros((1,1)))], y))) # replace it with your code
+    # return data.map(lambda (k, (x, y)): (k, (x, [linear_forward(x, A1, b1), 
+    #     ReLU_forward(linear_forward(x, A1, b1)), 
+    #     linear_forward(ReLU_forward(linear_forward(x, A1, b1)), A3, b3)], y)))
+
+    return data.map(lambda (k, (x, y)): (k, (x, [conv_forward(x, A1, b1, S1, P1), 
+        ReLU_forward((conv_forward(x, A1, b1, S1, P1))[0]), 
+        max_pool_forward(ReLU_forward((conv_forward(x, A1, b1, S1, P1)[0])), F3, S3),
+        conv_forward(max_pool_forward(ReLU_forward((conv_forward(x, A1, b1, S1, P1)[0])), F3, S3)[0], A4, b4, S4, P4), 
+        ReLU_forward(conv_forward(max_pool_forward(ReLU_forward((conv_forward(x, A1, b1, S1, P1)[0])), F3, S3)[0], A4, b4, S4, P4)[0]), 
+        max_pool_forward((ReLU_forward(conv_forward(max_pool_forward(ReLU_forward((conv_forward(x, A1, b1, S1, P1)[0])), F3, S3)[0], A4, b4, S4, P4)[0])) ,F6, S6), 
+        conv_forward((max_pool_forward((ReLU_forward(conv_forward(max_pool_forward(ReLU_forward((conv_forward(x, A1, b1, S1, P1)[0])), F3, S3)[0], A4, b4, S4, P4)[0])), F6, S6))[0], A7, b7, S7, P7),
+        ReLU_forward(conv_forward((max_pool_forward((ReLU_forward(conv_forward(max_pool_forward(ReLU_forward((conv_forward(x, A1, b1, S1, P1)[0])), F3, S3)[0], A4, b4, S4, P4)[0])), F6, S6))[0], A7, b7, S7, P7)[0]),
+        max_pool_forward(( ReLU_forward(conv_forward((max_pool_forward((ReLU_forward(conv_forward(max_pool_forward(ReLU_forward((conv_forward(x, A1, b1, S1, P1)[0])), F3, S3)[0], A4, b4, S4, P4)[0])), F6, S6))[0], A7, b7, S7, P7)[0])) , F9, S9),
+        linear_forward((max_pool_forward(( ReLU_forward(conv_forward((max_pool_forward((ReLU_forward(conv_forward(max_pool_forward(ReLU_forward((conv_forward(x, A1, b1, S1, P1)[0])), F3, S3)[0], A4, b4, S4, P4)[0])), F6, S6))[0], A7, b7, S7, P7)[0])) , F9, S9)[0]), A10, b10)], y)))
 
   def backward(self, data, count):
     """
@@ -166,10 +199,10 @@ class CNNClassifier(Classifier):
     """
 
     """ TODO: Softmax Loss Layer """ 
-
+    softmax = data.map(lambda (x, l, y): (x, softmax_loss(l[-1], y) + (l,))) \
+                  .map(lambda (x, (L, df, a)): (x, (L/count, df/count, a)))
     """ TODO: Compute Loss """
-    L = 0.0 # replace it with your code
-
+    L = softmax.map(lambda (x, (y, z, a)): y).reduce(lambda x, y: x + y)
     """ regularization """
     L += 0.5 * self.lam * np.sum(self.A1*self.A1)
     L += 0.5 * self.lam * np.sum(self.A4*self.A4)
@@ -177,10 +210,11 @@ class CNNClassifier(Classifier):
     L += 0.5 * self.lam * np.sum(self.A10*self.A10)
 
     """ TODO: Layer10: FC (1 x 1 x 10) Backward """
+    back_p_l10 = softmax.map(lambda (k, (x, y, a)): (k, linear_backward(y, a[8][0], self.A10) + (a,)))
 
     """ TODO: gradients on A10 & b10 """
-    dLdA10 = np.zeros(self.A10.shape) # replace it with your code
-    dLdb10 = np.zeros(self.b10.shape) # replace it with your code
+    dLdA10 = back_p_l10.map(lambda (k, (x, y, z, a)): y).reduce(lambda x, y: y + x)
+    dLdb10 = back_p_l10.map(lambda (k, (x, y, z, a)): z).reduce(lambda x, y: y + x)
 
     """ TODO: Layer9: Pool (4 x 4 x 20) Backward """
 
