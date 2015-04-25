@@ -217,14 +217,14 @@ class CNNClassifier(Classifier):
     dLdb10 = back_p_l10.map(lambda (k, (x, y, z, a)): z).reduce(lambda x, y: y + x)
 
     """ TODO: Layer9: Pool (4 x 4 x 20) Backward """
-
+    back_p_l9 = back_p_l10.map(lambda (k, (x, y, z, a)): (k, max_pool_backward(x, a[7][0], a[8][1], self.F9, self.S9) + (a,)))
     """ TODO: Layer8: ReLU (8 x 8 x 20) Backward """
-
+    back_p_l8 = back_p_l9.map(lambda (k, (x, a)): (k, ReLU_backward(x, a[6][0]) + (a,)))
     """ TODO: Layer7: Conv (8 x 8 x 20) Backward """
-
+    back_p_l7 = back_p_l8.map(lambda (k, (x, a)): (k, conv_backward(x, a[5][0], a[6][1]), self.A7, self.S7, self.P7) + (a,))
     """ TODO: gradients on A7 & b7 """
-    dLdA7 = np.zeros(self.A7.shape) # replace it with your code
-    dLdb7 = np.zeros(self.b7.shape) # replace it with your code
+    dLdA7 = back_p_l7.map(lambda (k, (x, y, z, a)): y).reduce(lambda x, y: y + x)
+    dLdb7 = back_p_l7.map(lambda (k, (x, y, z, a)): z).reduce(lambda x, y: y + x)
  
     """ TODO: Layer6: Pool (8 x 8 x 20) Backward """
 
