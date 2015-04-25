@@ -70,9 +70,11 @@ class NNClassifier(Classifier):
     A3 = self.A3
     b3 = self.b3
 
-    return data.map(lambda (k, (x, y)): (k, (x, [linear_forward(x, A1, b1), 
-        ReLU_forward(linear_forward(x, A1, b1)), 
-        linear_forward(ReLU_forward(linear_forward(x, A1, b1)), A3, b3)], y)))
+    l_f = data.map(lambda (k, (x, y)): (k, (x, [linear_forward(x, A1, b1)], y)))
+    r_f = l_f.map(lambda (k, (x, a, y)): (k, (x, a + [(ReLU_forward(a[0]))], y)))
+    l_f2 = r_f.map(lambda (k, (x, a, y)): (k, (x, a + [linear_forward(a[1], A3, b3)], y)))
+
+    return l_f2
 
   def backward(self, data, count):
     """

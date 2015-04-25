@@ -1,0 +1,17 @@
+spark-linear: passes (3 min, .42 accuracy)
+
+spark-nn: too slow (~8.4 min, 0.47 accuracy)
+
+spark-cnn: 
+
+spark-linear-small: passes (.89 min, 0.48 accuracy)
+
+spark-nn-small: passes (~2.47 min, .46 accuracy)
+
+spark-cnn-small: way too slow (~7.8 min, .76 accuracy)
+
+spark-linear-large: passes (11.74 min, .45 accuracy)
+
+spark-nn-large: running
+
+spark-cnn-large:
