@@ -217,34 +217,35 @@ class CNNClassifier(Classifier):
     dLdb10 = back_p_l10.map(lambda (k, (x, y, z, a)): z).reduce(lambda x, y: y + x)
 
     """ TODO: Layer9: Pool (4 x 4 x 20) Backward """
-    back_p_l9 = back_p_l10.map(lambda (k, (x, y, z, a)): (k, max_pool_backward(x, a[7][0], a[8][1], self.F9, self.S9) + (a,)))
+    back_p_l9 = back_p_l10.map(lambda (k, (x, y, z, a)): (k, (max_pool_backward(x, a[7], a[8][1], self.F9, self.S9), a)))
     """ TODO: Layer8: ReLU (8 x 8 x 20) Backward """
-    back_p_l8 = back_p_l9.map(lambda (k, (x, a)): (k, ReLU_backward(x, a[6][0]) + (a,)))
+    back_p_l8 = back_p_l9.map(lambda (k, (x, a)): (k, (ReLU_backward(x, a[6][0]), a)))
     """ TODO: Layer7: Conv (8 x 8 x 20) Backward """
-    back_p_l7 = back_p_l8.map(lambda (k, (x, a)): (k, conv_backward(x, a[5][0], a[6][1]), self.A7, self.S7, self.P7) + (a,))
+    back_p_l7 = back_p_l8.map(lambda (k, (x, a)): (k, conv_backward(x, a[5][0], a[6][1], self.A7, self.S7, self.P7) + (a,)))
     """ TODO: gradients on A7 & b7 """
     dLdA7 = back_p_l7.map(lambda (k, (x, y, z, a)): y).reduce(lambda x, y: y + x)
     dLdb7 = back_p_l7.map(lambda (k, (x, y, z, a)): z).reduce(lambda x, y: y + x)
  
     """ TODO: Layer6: Pool (8 x 8 x 20) Backward """
-
+    back_p_l6 = back_p_l7.map(lambda (k, (x, y, z, a)): (k, (max_pool_backward(x, a[4], a[5][1], self.F6, self.S6), a)))
     """ TODO: Layer5: ReLU (16 x 16 x 20) Backward """ 
-
+    back_p_l5 = back_p_l6.map(lambda (k, (x, a)): (k, (ReLU_backward(x, a[3][0]), a)))
     """ TODO: Layer4: Conv (16 x 16 x 20) Backward """ 
-
+    back_p_l4 = back_p_l5.map(lambda (k, (x, a)): (k, conv_backward(x, a[2][0], a[3][1], self.A4, self.S4, self.P4) + (a,)))
     """ TODO: gradients on A4 & b4 """
-    dLdA4 = np.zeros(self.A4.shape) # replace it with your code
-    dLdb4 = np.zeros(self.b4.shape) # replace it with your code
+    dLdA4 = back_p_l4.map(lambda (k, (x, y, z, a)): y).reduce(lambda x, y: y + x)
+    dLdb4 = back_p_l4.map(lambda (k, (x, y, z, a)): z).reduce(lambda x, y: y + x)
  
     """ TODO: Layer3: Pool (16 x 16 x 16) Backward """ 
- 
+    back_p_l3 = back_p_l4.map(lambda (k, (x, y, z, a)): (k, (max_pool_backward(x, a[1], a[2][1], self.F3, self.S3), a)))
     """ TODO: Layer2: ReLU (32 x 32 x 16) Backward """
-
+    back_p_l2 = back_p_l3.map(lambda (k, (x, a)): (k, (ReLU_backward(x, a[0][0]), a)))
     """ TODO: Layer1: Conv (32 x 32 x 16) Backward """
- 
+    back_p_l1 = back_p_l2.map(lambda (k, (x, a)): (k, conv_backward(x, k, a[0][1], self.A1, self.S1, self.P1) + (a,)))
     """ TODO: gradients on A1 & b1 """
-    dLdA1 = np.zeros(self.A1.shape) # replace it with your code
-    dLdb1 = np.zeros(self.b1.shape) # replace it with your code
+    dLdA1 = back_p_l1.map(lambda (k, (x, y, z, a)): y).reduce(lambda x, y: y + x)
+    dLdb1 = back_p_l1.map(lambda (k, (x, y, z, a)): z).reduce(lambda x, y: y + x)
+ 
 
     """ regularization gradient """
     dLdA10 = dLdA10.reshape(self.A10.shape)

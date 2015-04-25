@@ -73,7 +73,6 @@ class NNClassifier(Classifier):
     return data.map(lambda (k, (x, y)): (k, (x, [linear_forward(x, A1, b1), 
         ReLU_forward(linear_forward(x, A1, b1)), 
         linear_forward(ReLU_forward(linear_forward(x, A1, b1)), A3, b3)], y)))
-                
 
   def backward(self, data, count):
     """
@@ -108,6 +107,7 @@ class NNClassifier(Classifier):
     back_p_l2 = back_p_l3.map(lambda (k, (x, y, z, a)): (k, ReLU_backward(x, a[0])))
 
     """ Todo: Implmenet backpropagation for Layer 1 """
+
     back_p_l1 = back_p_l2.map(lambda (k, (x)): linear_backward(x, k, self.A1))
     
     """ Todo: Compute the gradient on A3 and b3 """

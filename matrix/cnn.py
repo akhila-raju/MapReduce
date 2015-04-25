@@ -363,7 +363,6 @@ class CNNClassifier(Classifier):
       print """ Layer2: ReLU (32 x 32 x 16) backward done: %.2f sec """ % (e - s)
     if dump_chunks > 0:
       dump_big_matrix(dLdl1, "cnn_dLdl1_mat", dump_chunks)
-
     s = time()
     dLdX, dLdA1, dLdb1 = conv_backward(dLdl1, X, X_col1, A1, S1, P1)
     e = time()
