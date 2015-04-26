@@ -75,6 +75,12 @@ class NNClassifier(Classifier):
         linear_forward(ReLU_forward(linear_forward(x, A1, b1)), A3, b3)], y)))
 
   def backward(self, data, count):
+    A1 = self.A1
+    b1 = self.b1
+    A3 = self.A3
+    b3 = self.b3
+    rho = self.rho
+    lam = self.lam
     """
     INPUT:
       - data: RDD[(images, list of layers, labels) pairs]
@@ -92,11 +98,11 @@ class NNClassifier(Classifier):
     L = softmax.map(lambda (x, (y, z, a)): y).reduce(lambda x, y: x + y)
 
     """ regularization """
-    L += 0.5 * self.lam * (np.sum(self.A1*self.A1) + np.sum(self.A3*self.A3))
+    L += 0.5 * lam * (np.sum(A1*A1) + np.sum(A3*A3))
 
     """ Todo: Implement backpropagation for Layer 3 """
 
-    back_p_l3 = softmax.map(lambda (k, (x, y, a)): (k, linear_backward(y, a[1], self.A3) + (a,)))
+    back_p_l3 = softmax.map(lambda (k, (x, y, a)): (k, linear_backward(y, a[1], A3) + (a,)))
     #returns dLdl2, dLdA3, dLdb3
 
     """ Todo: Compute the gradient on A3 and b3 """
@@ -108,24 +114,24 @@ class NNClassifier(Classifier):
 
     """ Todo: Implmenet backpropagation for Layer 1 """
 
-    back_p_l1 = back_p_l2.map(lambda (k, (x)): linear_backward(x, k, self.A1))
+    back_p_l1 = back_p_l2.map(lambda (k, (x)): linear_backward(x, k, A1))
     
     """ Todo: Compute the gradient on A3 and b3 """
     dLdA1 = back_p_l1.map(lambda (x, y, z): y).reduce(lambda x, y: y + x)
     dLdb1 = back_p_l1.map(lambda (x, y, z): z).reduce(lambda x, y: y + x)
 
     """ regularization gradient """
-    dLdA3 = dLdA3.reshape(self.A3.shape)
-    dLdA1 = dLdA1.reshape(self.A1.shape)
-    dLdA3 += self.lam * self.A3
-    dLdA1 += self.lam * self.A1
+    dLdA3 = dLdA3.reshape(A3.shape)
+    dLdA1 = dLdA1.reshape(A1.shape)
+    dLdA3 += lam * A3
+    dLdA1 += lam * A1
 
     """ tune the parameter """
-    self.v1 = self.mu * self.v1 - self.rho * dLdA1
-    self.v3 = self.mu * self.v3 - self.rho * dLdA3
-    self.A1 += self.v1
-    self.A3 += self.v3
-    self.b1 += - self.rho * dLdb1
-    self.b3 += - self.rho * dLdb3
+    self.v1 = self.mu * self.v1 - rho * dLdA1
+    self.v3 = self.mu * self.v3 - rho * dLdA3
+    A1 += self.v1
+    A3 += self.v3
+    b1 += - rho * dLdb1
+    b3 += - rho * dLdb3
 
     return L

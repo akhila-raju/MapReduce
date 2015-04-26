@@ -52,6 +52,7 @@ class LinearClassifier(Classifier):
 
 
   def backward(self, data, count):
+    A = self.A
     """
     INPUT:
       - data: RDD[(image, list of layers, labels) pairs]
@@ -75,13 +76,13 @@ class LinearClassifier(Classifier):
     """
     L = softmax.map(lambda (x, (y, z)): y).reduce(lambda x, y: x + y)
     """ regularization: loss = 1/2 * lam * sum_nk(A_nk * A_nk) """
-    L += 0.5 * self.lam * np.sum(self.A * self.A) 
+    L += 0.5 * self.lam * np.sum(A * A) 
 
     """ 
     Todo: Implement backpropagation for Layer 1 
     """
     
-    back_p = softmax.map(lambda (k, (x, y)): linear_backward(y, k, self.A))
+    back_p = softmax.map(lambda (k, (x, y)): linear_backward(y, k, A))
 
     """
     Todo: Calculate the gradients on A & b
@@ -92,8 +93,8 @@ class LinearClassifier(Classifier):
     dLdb = back_p.map(lambda (x, y, z): z).reduce(lambda x, y: y + x)
 
     """ regularization gradient """
-    dLdA = dLdA.reshape(self.A.shape)
-    dLdA += self.lam * self.A
+    dLdA = dLdA.reshape(A.shape)
+    dLdA += self.lam * A
 
     """ tune the parameter """
     self.v = self.mu * self.v - self.rho * dLdA
